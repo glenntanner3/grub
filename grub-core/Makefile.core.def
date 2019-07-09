@@ -2503,3 +2503,8 @@ module = {
   common = commands/i386/wrmsr.c;
   enable = x86;
 };
+
+module = {
+  name = basic_math;
+  common = commands/basic_math.c;
+};
