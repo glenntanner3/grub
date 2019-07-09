@@ -25,124 +25,67 @@
 #include <grub/i18n.h>
 //what my module needs
 #include <grub/env.h>
+#include <stdlib.h>
 
 GRUB_MOD_LICENSE ("GPLv3+");
 
-struct grub_env_whitelist
-{
-  grub_size_t len;
-  char **list;
-};
-typedef struct grub_env_whitelist grub_env_whitelist_t;
-
-static int
-test_whitelist_membership (const char* name,
-                           const grub_env_whitelist_t* whitelist)
-{
-  grub_size_t i;
-
-  for (i = 0; i < whitelist->len; i++)
-    if (grub_strcmp (name, whitelist->list[i]) == 0)
-      return 1;  /* found it */
-
-  return 0;  /* not found */
-}
-
-// store value
-      const char *prefix;
-      int len;
-
-      prefix = grub_env_get ("prefix");
-      if (! prefix)
-        {
-          grub_error (GRUB_ERR_FILE_NOT_FOUND, N_("variable `%s' isn't set"), "prefix");
-          return 0;
-        }
-
-      len = grub_strlen (prefix);
-      buf = grub_malloc (len + 1 + sizeof (GRUB_ENVBLK_DEFCFG));
-      if (! buf)
-        return 0;
-      filename = buf;
-
-      grub_strcpy (filename, prefix);
-      filename[len] = '/';
-      grub_strcpy (filename + len + 1, GRUB_ENVBLK_DEFCFG);
-
-// get value
-const char *value;
-
-      value = grub_env_get (args[0]);
-      if (value)
-
-
 static grub_err_t
-grub_cmd_add ()
+grub_cmd_add (grub_command_t cmd __attribute__ ((unused)), int argc, char **args)
 {
+  int i, ret, value_int, arg_int;
+  const char *value;
+  char buf[sizeof ("XXXXXXXX")];
+  
   if (argc != 2)
-  return grub_error (GRUB_ERR_BAD_ARGUMENT, "Variable and value required");  
+    return grub_error (GRUB_ERR_BAD_ARGUMENT, N_("Variable and value required"));
+  if (!grub_isdigit(args[1]) || !args[1] >= 0)
+    return grub_error (GRUB_ERR_BAD_ARGUMENT, N_("Value must be an interger"));
+  
+  value = grub_env_get (args[0]);
+  if (!value)
+    return grub_error (GRUB_ERR_BAD_ARGUMENT, N_("Variable must be defined and a digit"));
+  for (i=0;i<grub_strlen(value);i++)
+    if (!grub_isdigit(value[i]))
+      return grub_error (GRUB_ERR_BAD_ARGUMENT, N_("Variable must be defined and a digit"));
+    
+  var_value=atoi(value);
+  arg_int=atoi(args[1]);
+  
+  ret=(int)value+(int)args[1];
+  grub_snprintf (buf, sizeof (buf), "%d", ret);
+  
+  grub_env_set (args[0], buf);
 }
 
 static grub_err_t
-grub_cmd_sub ()
+grub_cmd_sub (grub_command_t cmd __attribute__ ((unused)), int argc, char **args)
 {
+  int i, ret, value_int, arg_int;
+  const char *value;
+  char buf[sizeof ("XXXXXXXX")];
+  
   if (argc != 2)
-  return grub_error (GRUB_ERR_BAD_ARGUMENT, "Variable and value required");  
-}
-
-/* Helper for grub_cmd_load_env.  */
-static int
-set_var (const char *name, const char *value, void *whitelist)
-{
-  if (! whitelist)
-    {
-      grub_env_set (name, value);
-      return 0;
-    }
-
-  if (test_whitelist_membership (name,
-				 (const grub_env_whitelist_t *) whitelist))
-    grub_env_set (name, value);
-
-  return 0;
-}
-
-static grub_err_t
-grub_cmd_load_env (grub_extcmd_context_t ctxt, int argc, char **args)
-{
-  struct grub_arg_list *state = ctxt->state;
-  grub_file_t file;
-  grub_envblk_t envblk;
-  grub_env_whitelist_t whitelist;
-
-  whitelist.len = argc;
-  whitelist.list = args;
-
-  /* state[0] is the -f flag; state[1] is the --skip-sig flag */
-  file = open_envblk_file ((state[0].set) ? state[0].arg : 0, state[1].set);
-  if (! file)
-    return grub_errno;
-
-  envblk = read_envblk_file (file);
-  if (! envblk)
-    goto fail;
-
-  /* argc > 0 indicates caller provided a whitelist of variables to read. */
-  grub_envblk_iterate (envblk, argc > 0 ? &whitelist : 0, set_var);
-  grub_envblk_close (envblk);
-
- fail:
-  grub_file_close (file);
-  return grub_errno;
-}
-
-/* Print all variables in current context.  */
-static int
-print_var (const char *name, const char *value,
-           void *hook_data __attribute__ ((unused)))
-{
-  grub_printf ("%s=%s\n", name, value);
-  return 0;
+    return grub_error (GRUB_ERR_BAD_ARGUMENT, N_("Variable and value required"));
+  if (!grub_isdigit(args[1]) || !args[1] >= 0)
+    return grub_error (GRUB_ERR_BAD_ARGUMENT, N_("Value must be an interger"));
+  
+  value = grub_env_get (args[0]);
+  if (!value)
+    return grub_error (GRUB_ERR_BAD_ARGUMENT, N_("Variable must be defined and a digit"));
+  for (i=0;i<grub_strlen(value);i++)
+    if (!grub_isdigit(value[i]))
+      return grub_error (GRUB_ERR_BAD_ARGUMENT, N_("Variable must be defined and a digit"));
+  
+  var_value=atoi(value);
+  arg_int=atoi(args[1]);
+  
+  if (arg_int > var_value)
+    return grub_error (GRUB_ERR_BAD_ARGUMENT, N_("Result may not be negitive"));
+  
+  ret=var_value-arg_int;
+  grub_snprintf (buf, sizeof (buf), "%d", ret);
+  
+  grub_env_set (args[0], buf);
 }
 
 static grub_extcmd_t cmd_add, cmd_sub;
