@@ -19,10 +19,10 @@
 
 // what any module needs
 #include <grub/dl.h>
-#include <grub/mm.h>
 #include <grub/misc.h>
 #include <grub/extcmd.h>
 #include <grub/i18n.h>
+#include <grub/mm.h>
 // what my module needs
 #include <grub/env.h>
 
@@ -60,9 +60,11 @@ grub_cmd_add (grub_extcmd_context_t ctxt __attribute__ ((unused)), int argc, cha
   }
   
   ret=value_int+arg_int;
-  grub_snprintf (buf, sizeof (buf), "%d", ret);
+  grub_printf ("%d", ret);
   
-  grub_env_set (args[0], buf);
+  grub_snprintf (buf, sizeof (buf), "%d", ret);
+  grub_printf ("%s", buf);
+  //grub_env_set (args[0], buf);
   return 0;
 }
 
@@ -101,9 +103,11 @@ grub_cmd_sub (grub_extcmd_context_t ctxt __attribute__ ((unused)), int argc, cha
     return grub_error (GRUB_ERR_BAD_ARGUMENT, N_("Result may not be negitive"));
   
   ret=value_int-arg_int;
-  grub_snprintf (buf, sizeof (buf), "%d", ret);
+  grub_printf ("%d", ret);
   
-  grub_env_set (args[0], buf);
+  grub_snprintf (buf, sizeof (buf), "%d", ret);
+  grub_printf ("%s", buf);
+  //grub_env_set (args[0], buf);
   return 0;
 }
 
