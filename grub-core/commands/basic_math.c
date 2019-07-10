@@ -34,7 +34,7 @@ grub_cmd_add (grub_extcmd_context_t ctxt __attribute__ ((unused)), int argc, cha
   unsigned int i;
   int ret, value_int=0, arg_int=0, digit;
   const char *value;
-  char buf[sizeof ("XXXXXXXX")];
+  char buf[512];
   
   if (argc != 2)
     return grub_error (GRUB_ERR_BAD_ARGUMENT, N_("Variable and value required"));
@@ -72,7 +72,7 @@ grub_cmd_sub (grub_extcmd_context_t ctxt __attribute__ ((unused)), int argc, cha
   unsigned int i;
   int ret, value_int=0, arg_int=0, digit;
   const char *value;
-  char buf[sizeof ("XXXXXXXX")];
+  char buf[512];
   
   if (argc != 2)
     return grub_error (GRUB_ERR_BAD_ARGUMENT, N_("Variable and value required"));
@@ -108,7 +108,7 @@ grub_cmd_sub (grub_extcmd_context_t ctxt __attribute__ ((unused)), int argc, cha
 }
 
 static grub_extcmd_t cmd_add, cmd_sub;
-
+
 GRUB_MOD_INIT(basic_math)
 {
   cmd_add =
