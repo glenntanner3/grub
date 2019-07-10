@@ -17,75 +17,94 @@
  *  along with GRUB.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-//what any module needs
+// what any module needs
 #include <grub/dl.h>
 #include <grub/mm.h>
 #include <grub/misc.h>
 #include <grub/extcmd.h>
 #include <grub/i18n.h>
-//what my module needs
+// what my module needs
 #include <grub/env.h>
-#include <stdlib.h>
 
 GRUB_MOD_LICENSE ("GPLv3+");
 
 static grub_err_t
-grub_cmd_add (grub_command_t cmd __attribute__ ((unused)), int argc, char **args)
+grub_cmd_add (grub_extcmd_context_t ctxt __attribute__ ((unused)), int argc, char **args)
 {
-  int i, ret, value_int, arg_int;
+  unsigned int i;
+  int ret, value_int=0, arg_int=0, digit;
   const char *value;
   char buf[sizeof ("XXXXXXXX")];
   
   if (argc != 2)
     return grub_error (GRUB_ERR_BAD_ARGUMENT, N_("Variable and value required"));
-  if (!grub_isdigit(args[1]) || !args[1] >= 0)
-    return grub_error (GRUB_ERR_BAD_ARGUMENT, N_("Value must be an interger"));
   
   value = grub_env_get (args[0]);
   if (!value)
-    return grub_error (GRUB_ERR_BAD_ARGUMENT, N_("Variable must be defined and a digit"));
-  for (i=0;i<grub_strlen(value);i++)
-    if (!grub_isdigit(value[i]))
-      return grub_error (GRUB_ERR_BAD_ARGUMENT, N_("Variable must be defined and a digit"));
-    
-  var_value=atoi(value);
-  arg_int=atoi(args[1]);
+    return grub_error (GRUB_ERR_BAD_ARGUMENT, N_("Variable must be defined"));
   
-  ret=(int)value+(int)args[1];
+  for (i=0;i<grub_strlen(value);i++) {
+    if (grub_isdigit((int)value[i])) {
+      digit = value[i] - '0';
+      value_int = (10*value_int) + digit;
+    }
+  }
+  
+  for (i=0;i<grub_strlen(args[1]);i++) {
+    if (grub_isdigit((int)args[1][i])) {
+      digit = args[1][i] - '0';
+      arg_int = (10*arg_int) + digit;
+    } else {
+      return grub_error (GRUB_ERR_BAD_ARGUMENT, N_("Value must be a positive interger"));
+    }
+  }
+  
+  ret=value_int+arg_int;
   grub_snprintf (buf, sizeof (buf), "%d", ret);
   
   grub_env_set (args[0], buf);
+  return 0;
 }
 
 static grub_err_t
-grub_cmd_sub (grub_command_t cmd __attribute__ ((unused)), int argc, char **args)
+grub_cmd_sub (grub_extcmd_context_t ctxt __attribute__ ((unused)), int argc, char **args)
 {
-  int i, ret, value_int, arg_int;
+  unsigned int i;
+  int ret, value_int=0, arg_int=0, digit;
   const char *value;
   char buf[sizeof ("XXXXXXXX")];
   
   if (argc != 2)
     return grub_error (GRUB_ERR_BAD_ARGUMENT, N_("Variable and value required"));
-  if (!grub_isdigit(args[1]) || !args[1] >= 0)
-    return grub_error (GRUB_ERR_BAD_ARGUMENT, N_("Value must be an interger"));
   
   value = grub_env_get (args[0]);
   if (!value)
-    return grub_error (GRUB_ERR_BAD_ARGUMENT, N_("Variable must be defined and a digit"));
-  for (i=0;i<grub_strlen(value);i++)
-    if (!grub_isdigit(value[i]))
-      return grub_error (GRUB_ERR_BAD_ARGUMENT, N_("Variable must be defined and a digit"));
+    return grub_error (GRUB_ERR_BAD_ARGUMENT, N_("Variable must be defined"));
   
-  var_value=atoi(value);
-  arg_int=atoi(args[1]);
+  for (i=0;i<grub_strlen(value);i++) {
+    if (grub_isdigit((int)value[i])) {
+      digit = value[i] - '0';
+      value_int = (10*value_int) + digit;
+    }
+  }
   
-  if (arg_int > var_value)
+  for (i=0;i<grub_strlen(args[1]);i++) {
+    if (grub_isdigit((int)args[1][i])) {
+      digit = args[1][i] - '0';
+      arg_int = (10*arg_int) + digit;
+    } else {
+      return grub_error (GRUB_ERR_BAD_ARGUMENT, N_("Value must be a positive interger"));
+    }
+  }
+  
+  if (arg_int > value_int)
     return grub_error (GRUB_ERR_BAD_ARGUMENT, N_("Result may not be negitive"));
   
-  ret=var_value-arg_int;
+  ret=value_int-arg_int;
   grub_snprintf (buf, sizeof (buf), "%d", ret);
   
   grub_env_set (args[0], buf);
+  return 0;
 }
 
 static grub_extcmd_t cmd_add, cmd_sub;
@@ -96,12 +115,12 @@ GRUB_MOD_INIT(basic_math)
     grub_register_extcmd ("add", grub_cmd_add, 0,
 			  N_("<variable_name> <value>"),
 			  N_("Add value to variable."),
-			  options);
+			  0);
   cmd_sub =
     grub_register_extcmd ("sub", grub_cmd_sub, 0,
 			  N_("<variable_name> <value>"),
 			  N_("Subtract value from variable."),
-			  options);
+			  0);
 }
 
 GRUB_MOD_FINI(basic_math)
