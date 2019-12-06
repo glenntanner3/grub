@@ -32,8 +32,9 @@ static grub_err_t
 grub_cmd_add (grub_extcmd_context_t ctxt __attribute__ ((unused)), int argc, char **args)
 {
   unsigned int i;
-  int ret, value_int=0, arg_int=0, digit;
+  unsigned long long ret, value_int=0, arg_int=0, digit;
   const char *value;
+  char *output;
   char buf[512];
   
   if (argc != 2)
@@ -43,21 +44,14 @@ grub_cmd_add (grub_extcmd_context_t ctxt __attribute__ ((unused)), int argc, cha
   if (!value)
     return grub_error (GRUB_ERR_BAD_ARGUMENT, N_("Variable must be defined"));
   
-  for (i=0;i<grub_strlen(value);i++) {
-    if (grub_isdigit((int)value[i])) {
-      digit = value[i] - '0';
-      value_int = (10*value_int) + digit;
-    }
-  }
-  
   for (i=0;i<grub_strlen(args[1]);i++) {
-    if (grub_isdigit((int)args[1][i])) {
-      digit = args[1][i] - '0';
-      arg_int = (10*arg_int) + digit;
-    } else {
+    if (!grub_isdigit((int)args[1][i])) {
       return grub_error (GRUB_ERR_BAD_ARGUMENT, N_("Value must be a positive interger"));
     }
   }
+
+  value_int = grub_strtoull(value, &output, 10);
+  arg_int = grub_strtoull(args[1], &output, 10);
   
   ret=value_int+arg_int;
   /* grub_printf ("%d\n", ret); */
@@ -72,8 +66,9 @@ static grub_err_t
 grub_cmd_sub (grub_extcmd_context_t ctxt __attribute__ ((unused)), int argc, char **args)
 {
   unsigned int i;
-  int ret, value_int=0, arg_int=0, digit;
+  unsigned long long ret, value_int=0, arg_int=0, digit;
   const char *value;
+  char *output;
   char buf[512];
   
   if (argc != 2)
@@ -83,21 +78,14 @@ grub_cmd_sub (grub_extcmd_context_t ctxt __attribute__ ((unused)), int argc, cha
   if (!value)
     return grub_error (GRUB_ERR_BAD_ARGUMENT, N_("Variable must be defined"));
   
-  for (i=0;i<grub_strlen(value);i++) {
-    if (grub_isdigit((int)value[i])) {
-      digit = value[i] - '0';
-      value_int = (10*value_int) + digit;
-    }
-  }
-  
   for (i=0;i<grub_strlen(args[1]);i++) {
-    if (grub_isdigit((int)args[1][i])) {
-      digit = args[1][i] - '0';
-      arg_int = (10*arg_int) + digit;
-    } else {
+    if (!grub_isdigit((int)args[1][i])) {
       return grub_error (GRUB_ERR_BAD_ARGUMENT, N_("Value must be a positive interger"));
     }
   }
+
+  value_int = grub_strtoull(value, &output, 10);
+  arg_int = grub_strtoull(args[1], &output, 10);
   
   if (arg_int > value_int)
     return grub_error (GRUB_ERR_BAD_ARGUMENT, N_("Result may not be negitive"));
